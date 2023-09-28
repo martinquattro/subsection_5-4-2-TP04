@@ -6,6 +6,7 @@
 //=====[Declaration of public defines]=========================================
 
 #define CODE_NUMBER_OF_KEYS   4
+#define DATETIME_NUMBER_OF_KEYS 14
 
 //=====[Declaration of public data types]======================================
 

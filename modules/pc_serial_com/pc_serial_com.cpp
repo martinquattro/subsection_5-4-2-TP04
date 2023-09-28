@@ -21,6 +21,7 @@ typedef enum{
     PC_SERIAL_COMMANDS,
     PC_SERIAL_GET_CODE,
     PC_SERIAL_SAVE_NEW_CODE,
+    PC_SERIAL_SET_DATE_AND_TIME,
 } pcSerialComMode_t;
 
 //=====[Declaration and initialization of public global objects]===============
@@ -38,6 +39,7 @@ char codeSequenceFromPcSerialCom[CODE_NUMBER_OF_KEYS];
 static pcSerialComMode_t pcSerialComMode = PC_SERIAL_COMMANDS;
 static bool codeComplete = false;
 static int numberOfCodeChars = 0;
+static int sNumberOfDateAndTimeChars = 0;
 
 //=====[Declarations (prototypes) of private functions]========================
 
@@ -45,6 +47,7 @@ static void pcSerialComStringRead( char* str, int strLength );
 
 static void pcSerialComGetCodeUpdate( char receivedChar );
 static void pcSerialComSaveNewCodeUpdate( char receivedChar );
+static void pcSerialComSetDateAndTime( char receivedChar );
 
 static void pcSerialComCommandUpdate( char receivedChar );
 
@@ -97,6 +100,9 @@ void pcSerialComUpdate()
             case PC_SERIAL_SAVE_NEW_CODE:
                 pcSerialComSaveNewCodeUpdate( receivedChar );
             break;
+            case PC_SERIAL_SET_DATE_AND_TIME:
+                pcSerialComSetDateAndTime( receivedChar );
+            break;
             default:
                 pcSerialComMode = PC_SERIAL_COMMANDS;
             break;
@@ -118,6 +124,8 @@ void pcSerialComCodeCompleteWrite( bool state )
 
 static void pcSerialComStringRead( char* str, int strLength )
 {
+    // This is a blocking part of the program as it will stay "stopped" as long as the user enters the amount of keys
+
     int strIndex;
     for ( strIndex = 0; strIndex < strLength; strIndex++) {
         uartUsb.read( &str[strIndex] , 1 );
@@ -150,6 +158,47 @@ static void pcSerialComSaveNewCodeUpdate( char receivedChar )
         numberOfCodeChars = 0;
         codeWrite( newCodeSequence );
         pcSerialComStringWrite( "\r\nNew code configured\r\n\r\n" );
+    } 
+}
+
+static void pcSerialComSetDateAndTime( char receivedChar )
+{
+    static char sDateAndTimeSequence[DATETIME_NUMBER_OF_KEYS];
+
+    sDateAndTimeSequence[sNumberOfDateAndTimeChars] = receivedChar;
+    pcSerialComStringWrite( &receivedChar );
+    sNumberOfDateAndTimeChars++;
+    if ( sNumberOfDateAndTimeChars >= DATETIME_NUMBER_OF_KEYS ) 
+    {
+        pcSerialComMode = PC_SERIAL_COMMANDS;
+        numberOfCodeChars = 0;
+
+        char year[5] = "";
+        strncpy(year, sDateAndTimeSequence, 5);
+        year[4] = '\0';
+
+        char month[3] = "";
+        strncpy(month, sDateAndTimeSequence + 5, 7);
+        month[2] = '\0';
+
+        char day[3] = "";
+        strncpy(day, sDateAndTimeSequence + 7, 9);
+        day[2] = '\0';
+
+        char hour[3] = "";
+        strncpy(hour, sDateAndTimeSequence + 9, 11);
+        hour[2] = '\0';
+
+        char minute[3] = "";
+        strncpy(minute, sDateAndTimeSequence + 11, 13);
+        minute[2] = '\0';
+
+        char second[3] = "";
+        strncpy(second, sDateAndTimeSequence + 13, 15);
+        second[2] = '\0';
+       
+        dateAndTimeWrite( atoi(year), atoi(month), atoi(day), atoi(hour), atoi(minute), atoi(second) );
+        pcSerialComStringWrite( "\r\nDate and time has been set\r\n\r\n\r\n" );
     } 
 }
 
@@ -253,41 +302,9 @@ static void commandShowCurrentTemperatureInFahrenheit()
 
 static void commandSetDateAndTime()
 {
-    char year[5] = "";
-    char month[3] = "";
-    char day[3] = "";
-    char hour[3] = "";
-    char minute[3] = "";
-    char second[3] = "";
-    
-    pcSerialComStringWrite("\r\nType four digits for the current year (YYYY): ");
-    pcSerialComStringRead( year, 4);
-    pcSerialComStringWrite("\r\n");
-
-    pcSerialComStringWrite("Type two digits for the current month (01-12): ");
-    pcSerialComStringRead( month, 2);
-    pcSerialComStringWrite("\r\n");
-
-    pcSerialComStringWrite("Type two digits for the current day (01-31): ");
-    pcSerialComStringRead( day, 2);
-    pcSerialComStringWrite("\r\n");
-
-    pcSerialComStringWrite("Type two digits for the current hour (00-23): ");
-    pcSerialComStringRead( hour, 2);
-    pcSerialComStringWrite("\r\n");
-
-    pcSerialComStringWrite("Type two digits for the current minutes (00-59): ");
-    pcSerialComStringRead( minute, 2);
-    pcSerialComStringWrite("\r\n");
-
-    pcSerialComStringWrite("Type two digits for the current seconds (00-59): ");
-    pcSerialComStringRead( second, 2);
-    pcSerialComStringWrite("\r\n");
-    
-    pcSerialComStringWrite("Date and time has been set\r\n");
-
-    dateAndTimeWrite( atoi(year), atoi(month), atoi(day), 
-        atoi(hour), atoi(minute), atoi(second) );
+    pcSerialComStringWrite( "Please enter the date and time in the following format: YYYYMMDDhhmmss \r\n" );
+    pcSerialComMode = PC_SERIAL_SET_DATE_AND_TIME;       // We set the new status of the state machine to star reading chars in the next iteration
+    sNumberOfDateAndTimeChars = 0;                       // The amount of read characters is initialized in 0
 }
 
 static void commandShowDateAndTime()
