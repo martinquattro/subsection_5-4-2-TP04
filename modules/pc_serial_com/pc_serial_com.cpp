@@ -173,28 +173,29 @@ static void pcSerialComSetDateAndTime( char receivedChar )
         pcSerialComMode = PC_SERIAL_COMMANDS;
         numberOfCodeChars = 0;
 
-        char year[5] = "";
-        strncpy(year, sDateAndTimeSequence, 5);
+        char year[5];
+        char month[3];
+        char day[3];
+        char hour[3];
+        char minute[3];
+        char second[3];
+
+        strncpy(year, sDateAndTimeSequence, 4);
         year[4] = '\0';
 
-        char month[3] = "";
-        strncpy(month, sDateAndTimeSequence + 5, 7);
+        strncpy(month, sDateAndTimeSequence + 4, 2);
         month[2] = '\0';
 
-        char day[3] = "";
-        strncpy(day, sDateAndTimeSequence + 7, 9);
+        strncpy(day, sDateAndTimeSequence + 6, 2);
         day[2] = '\0';
 
-        char hour[3] = "";
-        strncpy(hour, sDateAndTimeSequence + 9, 11);
+        strncpy(hour, sDateAndTimeSequence + 8, 2);
         hour[2] = '\0';
 
-        char minute[3] = "";
-        strncpy(minute, sDateAndTimeSequence + 11, 13);
+        strncpy(minute, sDateAndTimeSequence + 10, 2);
         minute[2] = '\0';
 
-        char second[3] = "";
-        strncpy(second, sDateAndTimeSequence + 13, 15);
+        strncpy(second, sDateAndTimeSequence + 12, 2);
         second[2] = '\0';
        
         dateAndTimeWrite( atoi(year), atoi(month), atoi(day), atoi(hour), atoi(minute), atoi(second) );
