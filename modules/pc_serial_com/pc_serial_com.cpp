@@ -163,15 +163,15 @@ static void pcSerialComSaveNewCodeUpdate( char receivedChar )
 
 static void pcSerialComSetDateAndTime( char receivedChar )
 {
-    static char sDateAndTimeSequence[DATETIME_NUMBER_OF_KEYS];
+    static char sDateAndTimeSequence[DATETIME_NUMBER_OF_KEYS];                  // string to save each character that is read
 
-    sDateAndTimeSequence[sNumberOfDateAndTimeChars] = receivedChar;
+    sDateAndTimeSequence[sNumberOfDateAndTimeChars] = receivedChar;             // the read character is added to the string
     pcSerialComStringWrite( &receivedChar );
     sNumberOfDateAndTimeChars++;
-    if ( sNumberOfDateAndTimeChars >= DATETIME_NUMBER_OF_KEYS ) 
+    if ( sNumberOfDateAndTimeChars >= DATETIME_NUMBER_OF_KEYS )                 // condition to know when all characters were introduced
     {
-        pcSerialComMode = PC_SERIAL_COMMANDS;
-        numberOfCodeChars = 0;
+        pcSerialComMode = PC_SERIAL_COMMANDS;                                   // change the state
+        numberOfCodeChars = 0;                                                  // reset the counter
 
         char year[5];
         char month[3];
@@ -180,8 +180,8 @@ static void pcSerialComSetDateAndTime( char receivedChar )
         char minute[3];
         char second[3];
 
-        strncpy(year, sDateAndTimeSequence, 4);
-        year[4] = '\0';
+        strncpy(year, sDateAndTimeSequence, 4);                                 // the string is split to obtain the
+        year[4] = '\0';                                                         // year, mont, day, hour, minutes and secondes introduced
 
         strncpy(month, sDateAndTimeSequence + 4, 2);
         month[2] = '\0';
